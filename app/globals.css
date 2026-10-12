@@ -1,0 +1,89 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+:root {
+  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Plus Jakarta Sans", "Inter", sans-serif;
+}
+
+body {
+  color: #0F172A;
+  background-color: #F8FAFC;
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Institutional academic typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+  color: #0F2848;
+}
+
+/* Custom scrollbars suitable for academic portals */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Clean institutional card base */
+.academic-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+}
+
+.academic-card-header {
+  border-bottom: 1px solid #F1F5F9;
+  padding: 1rem 1.25rem;
+}
+
+/* Clean academic badge styles */
+.badge-navy {
+  background-color: #E1EBF5;
+  color: #143763;
+  border: 1px solid #C4D7EB;
+}
+
+.badge-gold {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.badge-critical {
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.badge-success {
+  background-color: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+/* PBL Connect Pastel Mesh Gradient Background */
+.pbl-auth-bg {
+  background-color: #F4F6FC;
+  background-image:
+    radial-gradient(at 10% 15%, rgba(219, 234, 254, 0.9) 0px, transparent 50%),
+    radial-gradient(at 90% 85%, rgba(252, 231, 243, 0.85) 0px, transparent 50%),
+    radial-gradient(at 50% 45%, rgba(238, 242, 255, 0.75) 0px, transparent 60%),
+    radial-gradient(at 85% 15%, rgba(243, 232, 255, 0.8) 0px, transparent 45%),
+    radial-gradient(at 15% 85%, rgba(254, 240, 245, 0.7) 0px, transparent 45%);
+  background-attachment: fixed;
+}

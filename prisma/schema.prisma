@@ -1,0 +1,238 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String          @id @default(uuid())
+  customId     String?         @unique // e.g. "AT-STUDENT-001" or "AT-TEACHER-001"
+  email        String          @unique
+  passwordHash String
+  role         String          // "STUDENT" | "TEACHER" | "ADMIN"
+  name         String
+  avatar       String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  student       Student?
+  teacher       Teacher?
+  responses     QueryResponse[]
+  notifications Notification[]
+
+  @@index([role])
+  @@index([customId])
+}
+
+model Section {
+  id              String           @id @default(uuid())
+  name            String           @unique // e.g. "BCA - SEC-G3"
+  program         String           // "Bachelor of Computer Applications"
+  batch           String           // "2023-2026"
+  semester        Int              @default(3)
+  createdAt       DateTime         @default(now())
+
+  students        Student[]
+  teacherSubjects TeacherSubject[]
+  sectionSubjects SectionSubject[]
+  assignments     Assignment[]
+}
+
+model Student {
+  id            String       @id @default(uuid())
+  userId        String       @unique
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rollNumber    String       @unique // e.g. "GEU/2023/BCA/042"
+  sectionId     String
+  section       Section      @relation(fields: [sectionId], references: [id])
+  semester      Int          @default(3)
+  admissionYear Int          @default(2023)
+  createdAt     DateTime     @default(now())
+
+  submissions   Submission[]
+  queries       Query[]
+
+  @@index([sectionId])
+}
+
+model Teacher {
+  id              String           @id @default(uuid())
+  userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeId      String           @unique // e.g. "EMP-GEU-1082"
+  department      String           // "Department of Computer Applications"
+  designation     String           // "Associate Professor"
+  cabinLocation   String?          // e.g. "Room 204, Faculty Wing B"
+  createdAt       DateTime         @default(now())
+
+  teacherSubjects TeacherSubject[]
+  assignments     Assignment[]
+  queries         Query[]
+}
+
+model Subject {
+  id              String           @id @default(uuid())
+  code            String           @unique // e.g. "BCA-301"
+  name            String           // e.g. "Introduction to Data Structures"
+  credits         Int              @default(4)
+  isLab           Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+
+  sectionSubjects SectionSubject[]
+  teacherSubjects TeacherSubject[]
+  assignments     Assignment[]
+  queries         Query[]
+}
+
+model SectionSubject {
+  id        String   @id @default(uuid())
+  sectionId String
+  section   Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([sectionId, subjectId])
+  @@index([sectionId])
+  @@index([subjectId])
+}
+
+model TeacherSubject {
+  id           String   @id @default(uuid())
+  teacherId    String
+  teacher      Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId    String
+  subject      Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  sectionId    String
+  section      Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  academicYear String   // e.g. "2024-2025"
+  semester     Int      @default(3)
+  createdAt    DateTime @default(now())
+
+  @@unique([teacherId, subjectId, sectionId])
+  @@index([sectionId])
+  @@index([teacherId])
+  @@index([subjectId])
+}
+
+model Assignment {
+  id               String               @id @default(uuid())
+  title            String
+  description      String
+  instructions     String?              // Detailed submission guidelines
+  submissionMethod String               @default("ONLINE") // "ONLINE" | "PHYSICAL"
+  teacherLocation  String?              // e.g. "Faculty Cabin 204, CS Block B"
+  subjectId        String
+  subject          Subject              @relation(fields: [subjectId], references: [id])
+  teacherId        String
+  teacher          Teacher              @relation(fields: [teacherId], references: [id])
+  sectionId        String
+  section          Section              @relation(fields: [sectionId], references: [id])
+  assignedDate     DateTime             @default(now())
+  dueDate          DateTime
+  maxMarks         Int                  @default(100)
+  status           String               @default("ACTIVE") // "ACTIVE" | "CLOSED"
+  createdAt        DateTime             @default(now())
+
+  resources        AssignmentResource[]
+  submissions      Submission[]
+  queries          Query[]
+
+  @@index([subjectId])
+  @@index([sectionId])
+  @@index([teacherId])
+  @@index([dueDate])
+}
+
+model AssignmentResource {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String
+  fileType     String     // e.g. "application/pdf", "image/png", "video/mp4"
+  resourceType String     @default("DOCUMENT") // "PDF" | "IMAGE" | "VIDEO" | "DOCUMENT"
+  fileSize     String
+  createdAt    DateTime   @default(now())
+
+  @@index([assignmentId])
+}
+
+model Submission {
+  id             String     @id @default(uuid())
+  assignmentId   String
+  assignment     Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  submissionText String?
+  fileUrl        String?
+  fileName       String?
+  submittedAt    DateTime   @default(now())
+  marksAwarded   Int?
+  feedback       String?
+  status         String     @default("SUBMITTED") // "NOT_STARTED" | "IN_PROGRESS" | "SUBMITTED" | "VERIFIED" | "CORRECTION_REQUIRED" | "OVERDUE"
+
+  @@unique([assignmentId, studentId])
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([status])
+}
+
+model Query {
+  id           String          @id @default(uuid())
+  queryCode    String?         @unique // e.g. "QRY-2024-BCA-1042"
+  studentId    String
+  student      Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId    String
+  teacher      Teacher         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId    String
+  subject      Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  assignmentId String?
+  assignment   Assignment?     @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  title        String
+  question     String
+  status       String          @default("OPEN") // "OPEN" | "RESOLVED"
+  workflowStep String          @default("WAITING_FOR_TEACHER") // "SUBMITTED" | "AI_CLASSIFICATION" | "WAITING_FOR_TEACHER" | "ANSWERED"
+  priority     String          @default("NORMAL") // "ROUTINE" | "NORMAL" | "URGENT" (System Determined)
+  aiCategory   String?         // e.g. "Syntax & Implementation", "Theoretical Concept", "Deadline Inquiry"
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  responses    QueryResponse[]
+
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([subjectId])
+  @@index([assignmentId])
+  @@index([status])
+}
+
+model QueryResponse {
+  id           String   @id @default(uuid())
+  queryId      String
+  query        Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responseText String
+  createdAt    DateTime @default(now())
+
+  @@index([queryId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // "NEW_ASSIGNMENT" | "DEADLINE_APPROACHING" | "DEADLINE_PASSED" | "SUBMISSION_VERIFIED" | "QUERY_ANSWERED"
+  link      String?  // navigation link e.g. "/student/assignments/xyz"
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+}
